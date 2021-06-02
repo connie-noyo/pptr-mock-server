@@ -102,6 +102,67 @@ describe('handle request', () => {
     expect(request.respond).toHaveBeenCalled();
   });
 
+  test('with a an object literal body', () => {
+    const status = 200;
+
+    const handlers = [
+      {
+        method: 'get',
+        endpoint,
+        status,
+        options: {
+          body: {message: 'hello'}
+        },
+      },
+    ];
+
+    request.url.mockReturnValue(endpoint);
+    request.method.mockReturnValue('GET');
+
+    handleRequest(request, config, handlers);
+
+    expect(request.respond).toHaveBeenCalledWith({
+      status,
+      body: '{"message":"hello"}',
+      contentType: 'application/json',
+      headers: {
+        'access-control-allow-origin': baseAppUrl,
+      },
+    });
+  });
+
+  test('with a function body', async () => {
+    const status = 200;
+    const bodyFunction = jest.fn();
+
+    const handlers = [
+      {
+        method: 'get',
+        endpoint,
+        status,
+        options: {
+          body: bodyFunction,
+        },
+      },
+    ];
+
+    bodyFunction.mockResolvedValue({message: 'hello'});
+    request.url.mockReturnValue(endpoint);
+    request.method.mockReturnValue('GET');
+
+    await handleRequest(request, config, handlers);
+
+    expect(request.respond).toHaveBeenCalledWith({
+      status,
+      body: '{"message":"hello"}',
+      contentType: 'application/json',
+      headers: {
+        'access-control-allow-origin': baseAppUrl,
+      },
+    });
+    expect(bodyFunction).toHaveBeenCalledWith(request);
+  });
+
   test('if there is no match, but url starts with base api url', () => {
     request.url.mockReturnValue(endpoint);
     request.method.mockReturnValue('GET');

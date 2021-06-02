@@ -43,7 +43,7 @@ export default async function handleRequest(
   if (handler) {
     const {status, options} = handler;
     let {body} = options;
-    body = isFunction(body) ? body(request) : body;
+    body = isFunction(body) ? await body(request) : body;
 
     if (options.delay) {
       await sleep(options.delay);
